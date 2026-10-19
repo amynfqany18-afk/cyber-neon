@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CYBER NEON VANGUARD</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Vazirmatn:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Cyberpunk styling and effects */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #05050a;
+            color: #00f0ff;
+            font-family: 'Orbitron', 'Vazirmatn', sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        /* CRT Scanline Effect */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.03),
+                rgba(0, 255, 0, 0.01),
+                rgba(0, 0, 255, 0.03)
+            );
+            background-size: 100% 4px, 6px 100%;
+            z-index: 40;
+        }
+
+        /* Neon Glow Utility Classes */
+        .glow-cyan {
+            text-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff, 0 0 40px #00f0ff;
+        }
+        .glow-pink {
+            text-shadow: 0 0 10px #ff0055, 0 0 20px #ff0055, 0 0 40px #ff0055;
+        }
+        .box-glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4), inset 0 0 15px rgba(0, 240, 255, 0.2);
+            border: 1px solid #00f0ff;
+        }
+        .box-glow-pink {
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.4), inset 0 0 15px rgba(255, 0, 85, 0.2);
+            border: 1px solid #ff0055;
+        }
+
+        /* Cyberpunk Button */
+        .cyber-btn {
+            position: relative;
+            background: rgba(10, 15, 30, 0.85);
+            transition: all 0.2s ease;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+        .cyber-btn:hover {
+            background: #00f0ff;
+            color: #000;
+            box-shadow: 0 0 25px #00f0ff;
+            transform: translateY(-2px);
+        }
+        .cyber-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Custom Scrollbar for Shop */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(5, 5, 10, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00f0ff;
+            border-radius: 3px;
+        }
+
+        /* Touch Controls Overlay */
+        .touch-btn {
+            background: rgba(0, 240, 255, 0.15);
+            border: 2px solid #00f0ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00f0ff;
+            touch-action: none;
+        }
+        .touch-btn:active {
+            background: rgba(0, 240, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-black text-cyan-400 select-none overflow-hidden h-screen w-screen">
+
+    <!-- Scanline Effect Overlay -->
+    <div class="scanlines"></div>
+
+    <!-- Main Game Canvas -->
+    <canvas id="gameCanvas" class="absolute inset-0 z-0 block w-full h-full"></canvas>
+
+    <!-- UI Overlay Layer -->
+    <div id="uiOverlay" class="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-4 md:p-6">
+        
+        <!-- Top HUD Bar (Score, Health, Wave, Multi-Lang Selector) -->
+        <div id="topHUD" class="flex justify-between items-start w-full pointer-events-auto hidden">
+            <!-- Left Stats -->
+            <div class="flex flex-col gap-2">
+                <!-- Health Bar -->
+                <div class="flex items-center gap-2 bg-slate-900/80 p-2 rounded border border-cyan-500/50 box-glow-cyan">
+                    <i class="fa-solid fa-heart text-red-500 animate-pulse"></i>
+                    <div class="w-32 md:w-48 bg-gray-800 h-4 rounded-full overflow-hidden border border-red-500/40">
+                        <div id="hpFill" class="bg-gradient-to-r from-red-600 to-pink-500 h-full w-full transition-all duration-200"></div>
+                    </div>
+                    <span id="hpText" class="text-xs text-white font-bold min-w-[45px] text-center">100/100</span>
+                </div>
+
+                <!-- Score & Wave -->
+                <div class="flex gap-3 text-xs md:text-sm font-bold">
+                    <div class="bg-slate-900/80 px-3 py-1 rounded border border-cyan-500/30">
+                        <span id="lblScore">امتیاز:</span> <span id="scoreVal" class="text-white glow-cyan">0</span>
+                    </div>
+                    <div class="bg-slate-900/80 px-3 py-1 rounded border border-pink-500/30">
+                        <span id="lblWave">موج:</span> <span id="waveVal" class="text-pink-500 glow-pink">1</span>
+                    </div>
+                    <div class="bg-slate-900/80 px-3 py-1 rounded border border-yellow-500/30">
+                        <span id="lblCredits">کریدیت:</span> <span id="creditsVal" class="text-yellow-400">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Language & Pause Buttons -->
+            <div class="flex items-center gap-2">
+                <button onclick="togglePause()" class="cyber-btn px-3 py-2 text-sm border border-cyan-400 text-cyan-300">
+                    <i id="pauseIcon" class="fa-solid fa-pause"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Touch Controls HUD (Only shown on touch devices or small screens) -->
+        <div id="touchControls" class="pointer-events-auto hidden justify-between items-end w-full pb-4 px-2 z-30">
+            <!-- Left Virtual Joystick Area -->
+            <div id="joystickZone" class="w-32 h-32 relative rounded-full border-2 border-cyan-500/30 bg-cyan-950/20 touch-none flex items-center justify-center">
+                <div id="joystickKnob" class="w-12 h-12 rounded-full bg-cyan-400/50 border border-cyan-300 absolute"></div>
+            </div>
+
+            <!-- Right Action Buttons -->
+            <div class="flex gap-4">
+                <div id="btnDash" class="touch-btn w-16 h-16 text-xl">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div id="btnFire" class="touch-btn w-20 h-20 text-2xl border-pink-500 text-pink-500 bg-pink-950/20">
+                    <i class="fa-solid fa-crosshairs"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals & Screens Container -->
+    <div id="screensContainer" class="absolute inset-0 z-20 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+        
+        <!-- Language Switcher Bar Top-Right inside Modal -->
+        <div class="absolute top-4 right-4 z-30 flex gap-2">
+            <button onclick="setLanguage('fa')" class="lang-btn px-3 py-1 text-xs font-bold border border-cyan-500 rounded bg-black/60 hover:bg-cyan-500 hover:text-black transition">فارسی</button>
+            <button onclick="setLanguage('en')" class="lang-btn px-3 py-1 text-xs font-bold border border-cyan-500 rounded bg-black/60 hover:bg-cyan-500 hover:text-black transition">English</button>
+            <button onclick="setLanguage('de')" class="lang-btn px-3 py-1 text-xs font-bold border border-cyan-500 rounded bg-black/60 hover:bg-cyan-500 hover:text-black transition">Deutsch</button>
+        </div>
+
+        <!-- 1. Main Menu Screen -->
+        <div id="mainMenu" class="max-w-md w-full bg-slate-950/90 border-2 border-cyan-500 p-6 md:p-8 rounded-lg box-glow-cyan text-center flex flex-col gap-6 relative">
+            <div>
+                <h1 id="menuTitle" class="text-3xl md:text-4xl font-black glow-cyan tracking-wider mb-2">سایبر نئون</h1>
+                <p id="menuSub" class="text-xs text-cyan-300/80 tracking-widest uppercase">مدافع نئونی کلان‌شهر</p>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button onclick="startGame()" class="cyber-btn py-3 text-lg font-bold border-cyan-400 text-cyan-300">
+                    <i class="fa-solid fa-play ml-2"></i> <span id="btnStart">شروع بازی</span>
+                </button>
+                <button onclick="openShop()" class="cyber-btn py-3 text-lg font-bold border-pink-500 text-pink-400">
+                    <i class="fa-solid fa-cart-shopping ml-2"></i> <span id="btnShop">فروشگاه و ارتقاء</span>
+                </button>
+                <button onclick="openHowToPlay()" class="cyber-btn py-3 text-sm font-bold border-gray-600 text-gray-300">
+                    <i class="fa-solid fa-circle-info ml-2"></i> <span id="btnHowTo">راهنمای بازی</span>
+                </button>
+            </div>
+
+            <!-- High Score Badge -->
+            <div class="bg-cyan-950/40 p-3 rounded border border-cyan-500/30 flex justify-between items-center text-sm">
+                <span id="lblHighScore" class="text-gray-400">بالاترین رکورد:</span>
+                <span id="highScoreVal" class="text-yellow-400 font-bold glow-cyan">0</span>
+            </div>
+        </div>
+
+        <!-- 2. Shop & Upgrade Screen -->
+        <div id="shopScreen" class="max-w-lg w-full bg-slate-950/95 border-2 border-pink-500 p-6 rounded-lg box-glow-pink flex flex-col gap-4 hidden max-h-[90vh]">
+            <div class="flex justify-between items-center border-b border-pink-500/30 pb-3">
+                <h2 id="shopTitle" class="text-2xl font-bold text-pink-500 glow-pink">فروشگاه سایبر</h2>
+                <div class="text-sm bg-black/60 px-3 py-1 rounded border border-yellow-500/50 text-yellow-400 font-bold">
+                    <span id="shopCreditsVal">0</span> <i class="fa-solid fa-coins"></i>
+                </div>
+            </div>
+
+            <!-- Upgrades List -->
+            <div class="flex flex-col gap-3 overflow-y-auto pr-1 my-2 max-h-[50vh]">
+                <!-- Upgrade Item 1: Fire Rate -->
+                <div class="bg-slate-900/80 p-3 rounded border border-cyan-500/30 flex justify-between items-center">
+                    <div>
+                        <div id="upgFireRateTitle" class="font-bold text-cyan-300">سرعت شلیک</div>
+                        <div id="upgFireRateDesc" class="text-xs text-gray-400">کاهش زمان بین شلیک‌ها</div>
+                        <div class="text-xs text-pink-400 mt-1"><span id="lblLvl1">سطح:</span> <span id="lvlFireRate">1</span>/5</div>
+                    </div>
+                    <button id="btnUpgFireRate" onclick="buyUpgrade('fireRate')" class="cyber-btn px-4 py-2 text-xs font-bold border-cyan-400 text-cyan-300">
+                        <span id="costFireRate">100</span> <i class="fa-solid fa-bolt"></i>
+                    </button>
+                </div>
+
+                <!-- Upgrade Item 2: Damage -->
+                <div class="bg-slate-900/80 p-3 rounded border border-cyan-500/30 flex justify-between items-center">
+                    <div>
+                        <div id="upgDamageTitle" class="font-bold text-cyan-300">قدرت گلوله</div>
+                        <div id="upgDamageDesc" class="text-xs text-gray-400">افزایش میزان آسیب شلیک‌ها</div>
+                        <div class="text-xs text-pink-400 mt-1"><span id="lblLvl2">سطح:</span> <span id="lvlDamage">1</span>/5</div>
+                    </div>
+                    <button id="btnUpgDamage" onclick="buyUpgrade('damage')" class="cyber-btn px-4 py-2 text-xs font-bold border-cyan-400 text-cyan-300">
+                        <span id="costDamage">150</span> <i class="fa-solid fa-bolt"></i>
+                    </button>
+                </div>
+
+                <!-- Upgrade Item 3: Max HP -->
+                <div class="bg-slate-900/80 p-3 rounded border border-cyan-500/30 flex justify-between items-center">
+                    <div>
+                        <div id="upgHealthTitle" class="font-bold text-cyan-300">حداکثر سلامت</div>
+                        <div id="upgHealthDesc" class="text-xs text-gray-400">افزایش میزان جان سفینه</div>
+                        <div class="text-xs text-pink-400 mt-1"><span id="lblLvl3">سطح:</span> <span id="lvlHealth">1</span>/5</div>
+                    </div>
+                    <button id="btnUpgHealth" onclick="buyUpgrade('health')" class="cyber-btn px-4 py-2 text-xs font-bold border-cyan-400 text-cyan-300">
+                        <span id="costHealth">120</span> <i class="fa-solid fa-bolt"></i>
+                    </button>
+                </div>
+
+                <!-- Upgrade Item 4: Move Speed -->
+                <div class="bg-slate-900/80 p-3 rounded border border-cyan-500/30 flex justify-between items-center">
+                    <div>
+                        <div id="upgSpeedTitle" class="font-bold text-cyan-300">سرعت حرکت</div>
+                        <div id="upgSpeedDesc" class="text-xs text-gray-400">افزایش مانورپذیری در میدان نبرد</div>
+                        <div class="text-xs text-pink-400 mt-1"><span id="lblLvl4">سطح:</span> <span id="lvlSpeed">1</span>/5</div>
+                    </div>
+                    <button id="btnUpgSpeed" onclick="buyUpgrade('speed')" class="cyber-btn px-4 py-2 text-xs font-bold border-cyan-400 text-cyan-300">
+                        <span id="costSpeed">100</span> <i class="fa-solid fa-bolt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="closeShop()" class="cyber-btn py-2 text-sm font-bold border-gray-500 text-gray-300 w-full mt-2">
+                <span id="btnBack">بازگشت به منو</span>
+            </button>
+        </div>
+
+        <!-- 3. How to Play Screen -->
+        <div id="howToScreen" class="max-w-md w-full bg-slate-950/95 border-2 border-cyan-500 p-6 rounded-lg box-glow-cyan flex flex-col gap-4 hidden">
+            <h2 id="howToTitle" class="text-2xl font-bold text-cyan-400 glow-cyan border-b border-cyan-500/30 pb-2">راهنمای بازی</h2>
+            
+            <div id="howToContent" class="text-xs md:text-sm text-gray-300 space-y-3 leading-relaxed">
+                <!-- Injected dynamically via JS based on language -->
+            </div>
+
+            <button onclick="closeHowToPlay()" class="cyber-btn py-2 text-sm font-bold border-cyan-400 text-cyan-300 w-full mt-3">
+                <span id="btnBackHowTo">متوجه شدم</span>
+            </button>
+        </div>
+
+        <!-- 4. Game Over Screen -->
+        <div id="gameOverScreen" class="max-w-md w-full bg-slate-950/95 border-2 border-red-600 p-6 rounded-lg box-glow-pink text-center flex flex-col gap-5 hidden">
+            <div>
+                <h2 id="gameOverTitle" class="text-3xl font-black text-red-500 glow-pink">شکست خوردی!</h2>
+                <p id="gameOverSub" class="text-xs text-gray-400 mt-1">سفینه شما در تاریکی نئون نابود شد</p>
+            </div>
+
+            <div class="bg-slate-900/90 p-4 rounded border border-red-500/30 space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span id="lblFinalScore" class="text-gray-400">امتیاز نهایی:</span>
+                    <span id="finalScoreVal" class="text-white font-bold">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span id="lblFinalWave" class="text-gray-400">موج رسیده‌شده:</span>
+                    <span id="finalWaveVal" class="text-pink-400 font-bold">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span id="lblEarnedCredits" class="text-gray-400">کریدیت دریافت شده:</span>
+                    <span id="earnedCreditsVal" class="text-yellow-400 font-bold">0</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="restartGame()" class="cyber-btn py-3 text-sm font-bold border-cyan-400 text-cyan-300 flex-1">
+                    <i class="fa-solid fa-rotate-right ml-1"></i> <span id="btnRetry">تلاش مجدد</span>
+                </button>
+                <button onclick="showMainMenu()" class="cyber-btn py-3 text-sm font-bold border-gray-600 text-gray-300 flex-1">
+                    <span id="btnMenuGameOver">منوی اصلی</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 5. Pause Screen -->
+        <div id="pauseScreen" class="max-w-xs w-full bg-slate-950/95 border-2 border-cyan-400 p-6 rounded-lg box-glow-cyan text-center flex flex-col gap-4 hidden">
+            <h2 id="pauseTitle" class="text-2xl font-bold text-cyan-400 glow-cyan">بازی متوقف شد</h2>
+            
+            <button onclick="togglePause()" class="cyber-btn py-2 text-sm font-bold border-cyan-400 text-cyan-300 w-full">
+                <span id="btnResume">ادامه بازی</span>
+            </button>
+            <button onclick="quitToMenu()" class="cyber-btn py-2 text-sm font-bold border-red-500 text-red-400 w-full">
+                <span id="btnQuit">خروج به منو</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        /* -------------------------------------------------------------------------- */
+        /*                          TRANSLATION SYSTEM (i18n)                        */
+        /* -------------------------------------------------------------------------- */
+        const translations = {
+            fa: {
+                dir: 'rtl',
+                menuTitle: 'سایبر نئون',
+                menuSub: 'مدافع نئونی کلان‌شهر',
+                btnStart: 'شروع بازی',
+                btnShop: 'فروشگاه و ارتقاء',
+                btnHowTo: 'راهنمای بازی',
+                lblHighScore: 'بالاترین رکورد:',
+                shopTitle: 'فروشگاه سایبر',
+                upgFireRateTitle: 'سرعت شلیک',
+                upgFireRateDesc: 'کاهش زمان بین شلیک‌ها',
+                upgDamageTitle: 'قدرت گلوله',
+                upgDamageDesc: 'افزایش میزان آسیب شلیک‌ها',
+                upgHealthTitle: 'حداکثر سلامت',
+                upgHealthDesc: 'افزایش میزان جان سفینه',
+                upgSpeedTitle: 'سرعت حرکت',
+                upgSpeedDesc: 'افزایش مانورپذیری در میدان نبرد',
+                lblLvl: 'سطح:',
+                btnBack: 'بازگشت به منو',
+                howToTitle: 'راهنمای بازی',
+                howToContent: `
+                    <p><b>کنترل کیبورد:</b> استفاده از WASD یا جهت‌نماها برای حرکت. کلید Space برای شلیک و Shift برای Dash سریع.</p>
+                    <p><b>کنترل لمسی:</b> استفاده از جوی‌استیک سمت چپ برای حرکت و دکمه‌های سمت راست برای شلیک و Dash.</p>
+                    <p><b>هدف:</b> نابودی ربات‌ها و پهپادهای سایبرپانک، جمع‌آوری کریدیت‌های زرد رنگ و ارتقاء سفینه در فروشگاه.</p>
+                `,
+                btnBackHowTo: 'متوجه شدم',
+                gameOverTitle: 'شکست خوردی!',
+                gameOverSub: 'سفینه شما در تاریکی نئون نابود شد',
+                lblFinalScore: 'امتیاز نهایی:',
+                lblFinalWave: 'موج رسیده‌شده:',
+                lblEarnedCredits: 'کریدیت دریافتی:',
+                btnRetry: 'تلاش مجدد',
+                btnMenuGameOver: 'منوی اصلی',
+                pauseTitle: 'بازی متوقف شد',
+                btnResume: 'ادامه بازی',
+                btnQuit: 'خروج به منو',
+                lblScore: 'امتیاز:',
+                lblWave: 'موج:',
+                lblCredits: 'کریدیت:'
+            },
+            en: {
+                dir: 'ltr',
+                menuTitle: 'CYBER NEON',
+                menuSub: 'METROPOLIS VANGUARD',
+                btnStart: 'START GAME',
+                btnShop: 'UPGRADES SHOP',
+                btnHowTo: 'HOW TO PLAY',
+                lblHighScore: 'High Score:',
+                shopTitle: 'CYBER SHOP',
+                upgFireRateTitle: 'Fire Rate',
+                upgFireRateDesc: 'Decrease cooldown between shots',
+                upgDamageTitle: 'Bullet Damage',
+                upgDamageDesc: 'Increase destruction power',
+                upgHealthTitle: 'Max Hull HP',
+                upgHealthDesc: 'Increase ship durability',
+                upgSpeedTitle: 'Engine Speed',
+                upgSpeedDesc: 'Enhance mobility in combat',
+                lblLvl: 'Level:',
+                btnBack: 'Back to Menu',
+                howToTitle: 'HOW TO PLAY',
+                howToContent: `
+                    <p><b>Keyboard:</b> Use WASD or Arrows to move. Press Space to shoot, Shift to Dash.</p>
+                    <p><b>Touch:</b> Use left virtual joystick to move, right buttons to shoot and dash.</p>
+                    <p><b>Objective:</b> Destroy enemy cyber-drones, collect yellow energy credits, and upgrade your ship.</p>
+                `,
+                btnBackHowTo: 'Got It',
+                gameOverTitle: 'SYSTEM FAILURE',
+                gameOverSub: 'Your ship was lost in the neon dark',
+                lblFinalScore: 'Final Score:',
+                lblFinalWave: 'Wave Reached:',
+                lblEarnedCredits: 'Credits Earned:',
+                btnRetry: 'Retry',
+                btnMenuGameOver: 'Main Menu',
+                pauseTitle: 'GAME PAUSED',
+                btnResume: 'Resume Game',
+                btnQuit: 'Quit to Menu',
+                lblScore: 'Score:',
+                lblWave: 'Wave:',
+                lblCredits: 'Credits:'
+            },
+            de: {
+                dir: 'ltr',
+                menuTitle: 'CYBER NEON',
+                menuSub: 'METROPOLIS VANGUARD',
+                btnStart: 'SPIEL STARTEN',
+                btnShop: 'UPGRADE SHOP',
+                btnHowTo: 'ANLEITUNG',
+                lblHighScore: 'Highscore:',
+                shopTitle: 'CYBER SHOP',
+                upgFireRateTitle: 'Feuerrate',
+                upgFireRateDesc: 'Verringert Schuss-Abklingzeit',
+                upgDamageTitle: 'Schaden',
+                upgDamageDesc: 'Erhöht die Durchschlagskraft',
+                upgHealthTitle: 'Maximales Leben',
+                upgHealthDesc: 'Erhöht Schiffs-Haltbarkeit',
+                upgSpeedTitle: 'Geschwindigkeit',
+                upgSpeedDesc: 'Erhöht Bewegungstempo',
+                lblLvl: 'Stufe:',
+                btnBack: 'Zurück zum Menü',
+                howToTitle: 'ANLEITUNG',
+                howToContent: `
+                    <p><b>Tastatur:</b> Nutzen Sie WASD/Pfeiltasten. Leertaste zum Schießen, Shift für Dash.</p>
+                    <p><b>Touch:</b> Linker Joystick zum Bewegen, rechte Tasten für Schuss & Dash.</p>
+                    <p><b>Ziel:</b> Zerstören Sie Cyber-Drohnen, sammeln Sie Credits und verbessern Sie Ihr Schiff.</p>
+                `,
+                btnBackHowTo: 'Verstanden',
+                gameOverTitle: 'SYSTEMAUSFALL',
+                gameOverSub: 'Ihr Schiff wurde zerstört',
+                lblFinalScore: 'Endpunktzahl:',
+                lblFinalWave: 'Erreichte Welle:',
+                lblEarnedCredits: 'Verdiente Credits:',
+                btnRetry: 'Neustart',
+                btnMenuGameOver: 'Hauptmenü',
+                pauseTitle: 'PAUSE',
+                btnResume: 'Weiter',
+                btnQuit: 'Hauptmenü',
+                lblScore: 'Punkte:',
+                lblWave: 'Welle:',
+                lblCredits: 'Credits:'
+            }
+        };
+
+        let currentLang = 'fa';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            document.documentElement.dir = t.dir;
+            document.documentElement.lang = lang;
+
+            // Translate Text Elements
+            const ids = [
+                'menuTitle', 'menuSub', 'btnStart', 'btnShop', 'btnHowTo', 'lblHighScore',
+                'shopTitle', 'upgFireRateTitle', 'upgFireRateDesc', 'upgDamageTitle', 'upgDamageDesc',
+                'upgHealthTitle', 'upgHealthDesc', 'upgSpeedTitle', 'upgSpeedDesc', 'btnBack',
+                'howToTitle', 'btnBackHowTo', 'gameOverTitle', 'gameOverSub', 'lblFinalScore',
+                'lblFinalWave', 'lblEarnedCredits', 'btnRetry', 'btnMenuGameOver', 'pauseTitle',
+                'btnResume', 'btnQuit', 'lblScore', 'lblWave', 'lblCredits'
+            ];
+
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && t[id]) el.innerHTML = t[id];
+            });
+
+            // Level Labels in Shop
+            ['lblLvl1', 'lblLvl2', 'lblLvl3', 'lblLvl4'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = t.lblLvl;
+            });
+
+            document.getElementById('howToContent').innerHTML = t.howToContent;
+            playSynthSound(600, 0.05, 'sine');
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /*                         WEB AUDIO SYNTH SOUND SYSTEM                       */
+        /* -------------------------------------------------------------------------- */
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioCtx();
+        }
+
+        function playSynthSound(freq, duration, type = 'sine', sweep = false) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                if (sweep) {
+                    osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + duration);
+                }
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function playShootSound() {
+            playSynthSound(800, 0.08, 'sawtooth', true);
+        }
+
+        function playExplosionSound() {
+            playSynthSound(150, 0.3, 'square', true);
+        }
+
+        function playCoinSound() {
+            playSynthSound(1200, 0.12, 'sine');
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /*                              GAME ENGINE CORE                              */
+        /* -------------------------------------------------------------------------- */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Game State Variables
+        let gameState = 'MENU'; // MENU, PLAYING, PAUSED, GAMEOVER
+        let score = 0;
+        let wave = 1;
+        let credits = parseInt(localStorage.getItem('cyber_credits') || '0');
+        let highScore = parseInt(localStorage.getItem('cyber_highscore') || '0');
+
+        // Upgrades Levels (1 to 5)
+        let upgrades = JSON.parse(localStorage.getItem('cyber_upgrades')) || {
+            fireRate: 1,
+            damage: 1,
+            health: 1,
+            speed: 1
+        };
+
+        // Player Stats based on upgrades
+        let player = {
+            x: 0, y: 0,
+            radius: 18,
+            speed: 5,
+            hp: 100,
+            maxHp: 100,
+            fireRateCooldown: 0,
+            fireRateInterval: 15,
+            damage: 25,
+            dashCooldown: 0
+        };
+
+        let bullets = [];
+        let enemies = [];
+        let particles = [];
+        let pickups = [];
+        let keys = {};
+        let touchInput = { x: 0, y: 0, active: false, shooting: false };
+
+        /* -------------------------------------------------------------------------- */
+        /*                           UPGRADES & SHOP SYSTEM                           */
+        /* -------------------------------------------------------------------------- */
+        const upgradeCosts = {
+            fireRate: [100, 200, 350, 500],
+            damage: [150, 300, 450, 600],
+            health: [120, 250, 400, 550],
+            speed: [100, 200, 300, 400]
+        };
+
+        function updateShopUI() {
+            document.getElementById('shopCreditsVal').innerText = credits;
+            document.getElementById('creditsVal').innerText = credits;
+            document.getElementById('highScoreVal').innerText = highScore;
+
+            ['fireRate', 'damage', 'health', 'speed'].forEach(type => {
+                const lvl = upgrades[type];
+                document.getElementById(`lvl${type.charAt(0).toUpperCase() + type.slice(1)}`).innerText = lvl;
+                const btn = document.getElementById(`btnUpg${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                const costSpan = document.getElementById(`cost${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                
+                if (lvl >= 5) {
+                    costSpan.innerText = 'MAX';
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50');
+                } else {
+                    const cost = upgradeCosts[type][lvl - 1];
+                    costSpan.innerText = cost;
+                    btn.disabled = credits < cost;
+                }
+            });
+        }
+
+        function buyUpgrade(type) {
+            initAudio();
+            const lvl = upgrades[type];
+            if (lvl >= 5) return;
+            const cost = upgradeCosts[type][lvl - 1];
+            if (credits >= cost) {
+                credits -= cost;
+                upgrades[type]++;
+                localStorage.setItem('cyber_credits', credits);
+                localStorage.setItem('cyber_upgrades', JSON.stringify(upgrades));
+                playCoinSound();
+                updateShopUI();
+            }
+        }
+
+        function applyPlayerUpgrades() {
+            player.fireRateInterval = Math.max(5, 18 - (upgrades.fireRate - 1) * 3);
+            player.damage = 20 + (upgrades.damage - 1) * 15;
+            player.maxHp = 100 + (upgrades.health - 1) * 35;
+            player.hp = player.maxHp;
+            player.speed = 4.5 + (upgrades.speed - 1) * 0.8;
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /*                           SCREEN & UI NAVIGATION                           */
+        /* -------------------------------------------------------------------------- */
+        function hideAllScreens() {
+            ['mainMenu', 'shopScreen', 'howToScreen', 'gameOverScreen', 'pauseScreen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+        }
+
+        function showMainMenu() {
+            gameState = 'MENU';
+            hideAllScreens();
+            document.getElementById('screensContainer').classList.remove('hidden');
+            document.getElementById('mainMenu').classList.remove('hidden');
+            document.getElementById('topHUD').classList.add('hidden');
+            document.getElementById('touchControls').classList.add('hidden');
+            updateShopUI();
+        }
+
+        function openShop() {
+            initAudio();
+            hideAllScreens();
+            document.getElementById('shopScreen').classList.remove('hidden');
+            updateShopUI();
+        }
+
+        function closeShop() {
+            initAudio();
+            showMainMenu();
+        }
+
+        function openHowToPlay() {
+            initAudio();
+            hideAllScreens();
+            document.getElementById('howToScreen').classList.remove('hidden');
+        }
+
+        function closeHowToPlay() {
+            initAudio();
+            showMainMenu();
+        }
+
+        function startGame() {
+            initAudio();
+            applyPlayerUpgrades();
+            score = 0;
+            wave = 1;
+            bullets = [];
+            enemies = [];
+            particles = [];
+            pickups = [];
+
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+
+            gameState = 'PLAYING';
+            hideAllScreens();
+            document.getElementById('screensContainer').classList.add('hidden');
+            document.getElementById('topHUD').classList.remove('hidden');
+
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                document.getElementById('touchControls').classList.remove('hidden');
+                document.getElementById('touchControls').classList.add('flex');
+            }
+
+            spawnEnemyWave();
+            updateHUD();
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function togglePause() {
+            if (gameState === 'PLAYING') {
+                gameState = 'PAUSED';
+                document.getElementById('screensContainer').classList.remove('hidden');
+                document.getElementById('pauseScreen').classList.remove('hidden');
+            } else if (gameState === 'PAUSED') {
+                gameState = 'PLAYING';
+                document.getElementById('screensContainer').classList.add('hidden');
+                document.getElementById('pauseScreen').classList.add('hidden');
+            }
+        }
+
+        function quitToMenu() {
+            showMainMenu();
+        }
+
+        function gameOver() {
+            gameState = 'GAMEOVER';
+            playExplosionSound();
+            
+            let earnedCredits = Math.floor(score / 10);
+            credits += earnedCredits;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('cyber_highscore', highScore);
+            }
+            localStorage.setItem('cyber_credits', credits);
+
+            document.getElementById('finalScoreVal').innerText = score;
+            document.getElementById('finalWaveVal').innerText = wave;
+            document.getElementById('earnedCreditsVal').innerText = earnedCredits;
+
+            hideAllScreens();
+            document.getElementById('screensContainer').classList.remove('hidden');
+            document.getElementById('gameOverScreen').classList.remove('hidden');
+            document.getElementById('topHUD').classList.add('hidden');
+            document.getElementById('touchControls').classList.add('hidden');
+        }
+
+        function updateHUD() {
+            document.getElementById('hpFill').style.width = `${(player.hp / player.maxHp) * 100}%`;
+            document.getElementById('hpText').innerText = `${Math.ceil(player.hp)}/${player.maxHp}`;
+            document.getElementById('scoreVal').innerText = score;
+            document.getElementById('waveVal').innerText = wave;
+            document.getElementById('creditsVal').innerText = credits;
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /*                              GAME ENTITIES & LOGIC                         */
+        /* -------------------------------------------------------------------------- */
+        function spawnEnemyWave() {
+            const enemyCount = 5 + wave * 3;
+            for (let i = 0; i < enemyCount; i++) {
+                let x, y;
+                if (Math.random() < 0.5) {
+                    x = Math.random() < 0.5 ? -30 : canvas.width + 30;
+                    y = Math.random() * canvas.height;
+                } else {
+                    x = Math.random() * canvas.width;
+                    y = Math.random() < 0.5 ? -30 : canvas.height + 30;
+                }
+
+                const isFast = Math.random() < 0.3;
+                enemies.push({
+                    x: x,
+                    y: y,
+                    radius: isFast ? 12 : 18,
+                    speed: isFast ? 3.2 + wave * 0.2 : 1.8 + wave * 0.15,
+                    hp: isFast ? 20 + wave * 5 : 40 + wave * 10,
+                    maxHp: isFast ? 20 + wave * 5 : 40 + wave * 10,
+                    color: isFast ? '#ff0055' : '#00f0ff',
+                    isFast: isFast
+                });
+            }
+        }
+
+        function createParticles(x, y, color, count = 10) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    radius: Math.random() * 3 + 1,
+                    color: color,
+                    life: 30
+                });
+            }
+        }
+
+        function fireBullet(targetX, targetY) {
+            if (player.fireRateCooldown > 0) return;
+            
+            const angle = Math.atan2(targetY - player.y, targetX - player.x);
+            bullets.push({
+                x: player.x,
+                y: player.y,
+                vx: Math.cos(angle) * 12,
+                vy: Math.sin(angle) * 12,
+                damage: player.damage,
+                radius: 4
+            });
+
+            player.fireRateCooldown = player.fireRateInterval;
+            playShootSound();
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /*                           INPUT CONTROLLERS                                */
+        /* -------------------------------------------------------------------------- */
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (e.code === 'KeyP') togglePause();
+        });
+        window.addEventListener('keyup', e => keys[e.code] = false);
+
+        // Aim and shoot with mouse
+        let mousePos = { x: 0, y: 0 };
+        window.addEventListener('mousemove', e => {
+            mousePos.x = e.clientX;
+            mousePos.y = e.clientY;
+        });
+
+        window.addEventListener('mousedown', e => {
+            if (gameState === 'PLAYING' && e.target.tagName === 'CANVAS') {
+                touchInput.shooting = true;
+            }
+        });
+        window.addEventListener('mouseup', () => touchInput.shooting = false);
+
+        // Touch Virtual Joystick Logic
+        const joystickZone = document.getElementById('joystickZone');
+        const joystickKnob = document.getElementById('joystickKnob');
+
+        joystickZone.addEventListener('touchstart', handleJoystickMove, false);
+        joystickZone.addEventListener('touchmove', handleJoystickMove, false);
+        joystickZone.addEventListener('touchend', () => {
+            touchInput.active = false;
+            touchInput.x = 0;
+            touchInput.y = 0;
+            joystickKnob.style.transform = `translate(0px, 0px)`;
+        }, false);
+
+        function handleJoystickMove(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = joystickZone.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            let dx = touch.clientX - centerX;
+            let dy = touch.clientY - centerY;
+            const dist = Math.hypot(dx, dy);
+            const maxDist = rect.width / 2;
+
+            if (dist > maxDist) {
+                dx = (dx / dist) * maxDist;
+                dy = (dy / dist) * maxDist;
+            }
+
+            joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+            touchInput.active = true;
+            touchInput.x = dx / maxDist;
+            touchInput.y = dy / maxDist;
+        }
+
+        // Touch Action Buttons
+        const btnFire = document.getElementById('btnFire');
+        btnFire.addEventListener('touchstart', (e) => { e.preventDefault(); touchInput.shooting = true; });
+        btnFire.addEventListener('touchend', (e) => { e.preventDefault(); touchInput.shooting = false; });
+
+        const btnDash = document.getElementById('btnDash');
+        btnDash.addEventListener('touchstart', (e) => { e.preventDefault(); triggerDash(); });
+
+        function triggerDash() {
+            if (player.dashCooldown <= 0) {
+                player.x += (touchInput.x || 0) * 80;
+                player.y += (touchInput.y || 0) * 80;
+                player.dashCooldown = 60;
+                createParticles(player.x, player.y, '#00f0ff', 20);
+            }
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /*                               GAME LOOP                                    */
+        /* -------------------------------------------------------------------------- */
+        function update() {
+            if (gameState !== 'PLAYING') return;
+
+            // Player Movement Logic (Keyboard or Virtual Joystick)
+            let moveX = 0;
+            let moveY = 0;
+
+            if (keys['KeyW'] || keys['ArrowUp']) moveY -= 1;
+            if (keys['KeyS'] || keys['ArrowDown']) moveY += 1;
+            if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
+            if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
+
+            if (touchInput.active) {
+                moveX = touchInput.x;
+                moveY = touchInput.y;
+            }
+
+            if (keys['Space'] || touchInput.shooting) {
+                // Auto aim nearest enemy or mouse
+                let aimX = mousePos.x;
+                let aimY = mousePos.y;
+                if (touchInput.active && enemies.length > 0) {
+                    aimX = enemies[0].x;
+                    aimY = enemies[0].y;
+                }
+                fireBullet(aimX, aimY);
+            }
+
+            if (keys['ShiftLeft'] || keys['KeyE']) {
+                triggerDash();
+            }
+
+            // Normalize Speed
+            const len = Math.hypot(moveX, moveY);
+            if (len > 0) {
+                player.x += (moveX / (len > 1 ? len : 1)) * player.speed;
+                player.y += (moveY / (len > 1 ? len : 1)) * player.speed;
+            }
+
+            // Keep Player In Bounds
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+
+            // Cooldowns
+            if (player.fireRateCooldown > 0) player.fireRateCooldown--;
+            if (player.dashCooldown > 0) player.dashCooldown--;
+
+            // Update Bullets
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                let b = bullets[i];
+                b.x += b.vx;
+                b.y += b.vy;
+
+                // Remove out of screen bullets
+                if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) {
+                    bullets.splice(i, 1);
+                }
+            }
+
+            // Update Enemies
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let e = enemies[i];
+                const angle = Math.atan2(player.y - e.y, player.x - e.x);
+                e.x += Math.cos(angle) * e.speed;
+                e.y += Math.sin(angle) * e.speed;
+
+                // Bullet Collision
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    let b = bullets[j];
+                    const dist = Math.hypot(e.x - b.x, e.y - b.y);
+                    if (dist < e.radius + b.radius) {
+                        e.hp -= b.damage;
+                        createParticles(b.x, b.y, e.color, 5);
+                        bullets.splice(j, 1);
+
+                        if (e.hp <= 0) {
+                            createParticles(e.x, e.y, e.color, 15);
+                            playExplosionSound();
+
+                            // Drop Credits Pickups
+                            if (Math.random() < 0.6) {
+                                pickups.push({
+                                    x: e.x, y: e.y,
+                                    radius: 6,
+                                    val: Math.floor(Math.random() * 5) + 5
+                                });
+                            }
+
+                            score += e.isFast ? 25 : 15;
+                            enemies.splice(i, 1);
+                            break;
+                        }
+                    }
+                }
+
+                // Enemy Player Collision
+                const playerDist = Math.hypot(e.x - player.x, e.y - player.y);
+                if (playerDist < e.radius + player.radius) {
+                    player.hp -= 0.5;
+                    createParticles(player.x, player.y, '#ff0055', 2);
+                    if (player.hp <= 0) {
+                        gameOver();
+                    }
+                }
+            }
+
+            // Pickups Collection
+            for (let i = pickups.length - 1; i >= 0; i--) {
+                let p = pickups[i];
+                const dist = Math.hypot(p.x - player.x, p.y - player.y);
+                if (dist < p.radius + player.radius) {
+                    credits += p.val;
+                    playCoinSound();
+                    pickups.splice(i, 1);
+                }
+            }
+
+            // Update Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let pt = particles[i];
+                pt.x += pt.vx;
+                pt.y += pt.vy;
+                pt.life--;
+                if (pt.life <= 0) particles.splice(i, 1);
+            }
+
+            // Wave Clear & Spawning
+            if (enemies.length === 0) {
+                wave++;
+                spawnEnemyWave();
+            }
+
+            updateHUD();
+        }
+
+        function render() {
+            // Dark Cyber Grid Background
+            ctx.fillStyle = '#05050a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Background Grid
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.05)';
+            ctx.lineWidth = 1;
+            const gridSize = 40;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            if (gameState === 'PLAYING' || gameState === 'PAUSED') {
+                // Draw Pickups (Energy Credits)
+                pickups.forEach(p => {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#eab308';
+                    ctx.fillStyle = '#facc15';
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                });
+
+                // Draw Bullets
+                bullets.forEach(b => {
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = '#00f0ff';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                });
+
+                // Draw Enemies
+                enemies.forEach(e => {
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = e.color;
+                    ctx.fillStyle = e.color;
+                    ctx.beginPath();
+                    ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Enemy Health Bar
+                    if (e.hp < e.maxHp) {
+                        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                        ctx.fillRect(e.x - 15, e.y - e.radius - 8, 30, 4);
+                        ctx.fillStyle = e.color;
+                        ctx.fillRect(e.x - 15, e.y - e.radius - 8, (e.hp / e.maxHp) * 30, 4);
+                    }
+                    ctx.shadowBlur = 0;
+                });
+
+                // Draw Player Ship
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#00f0ff';
+                ctx.fillStyle = '#00f0ff';
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Inner Neon Core
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Draw Particles
+                particles.forEach(pt => {
+                    ctx.fillStyle = pt.color;
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+        }
+
+        function gameLoop() {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize App
+        setLanguage('fa');
+        showMainMenu();
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
